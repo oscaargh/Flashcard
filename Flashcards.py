@@ -207,7 +207,7 @@ class FlashcardApp:
                 logged_print("bye bye")
                 self.deck.exit()
                 break
-# Run the Flashcards application
-# This creates a FlashcardApp instance and starts the main loop
+# Run the Flashcards application.
+# This creates a FlashcardApp instance and starts the main loop.
 abc = FlashcardApp()
 abc.run()
