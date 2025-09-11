@@ -1,51 +1,93 @@
+"""
+Flashcards App
+
+A command-line flashcards program that allows users to:
+- Add, remove, and manage flashcards (term + definition)
+- Import/export flashcards to/from files
+- Quiz themselves on flashcards
+- Track statistics on errors
+- Save a log of all actions
+
+Supports command-line arguments:
+--import_from : automatically import cards from a file at start
+--export_to   : automatically export cards to a file on exit
+"""
+
+# ===============================
+# Imports and global setup
+# ===============================
 from io import StringIO
 import argparse
 
+# Memory file for logging all printed output
 memory_file = StringIO()
 
+# Create a parser for the handling of command-line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--import_from")
 parser.add_argument("--export_to")
 args = parser.parse_args()
 
 def logged_print(*args, **kwargs):
+    """
+    Prints a message to console and also logs it to memory_file.
+
+    Args:
+        *args: Values to print
+        **kwargs: Optional print keyword arguments (like end, sep)
+    """
     text = " ".join(map(str, args))
-    print(text, **kwargs)  # normal console output
+    print(text, **kwargs)
     memory_file.write(text + "\n")
 
 
 def logged_input(prompt=""):
+    """
+    Prompts the user for input, prints prompt to console,
+    and logs both the prompt and user's response to memory_file.
+
+    Args:
+        prompt (str): Message displayed to the user
+    Returns:
+        str: User's input
+    """
     response = input(prompt)
     memory_file.write(prompt + response + "\n")
     return response
 
 
 class FlashcardManager:
-    # Manager for all avalible functions in the program
+    """
+    Manages flashcards and their operations:
+    - Add, remove, import, export cards
+    - Ask user to define cards and track errors
+    - Log all console interactions
+    - Reset statistics and find hardest cards
+    """
     def __init__(self):
-        self.cards = {}
-        self.error_counter = {}
+        self.cards = {} # Term:Definition
+        self.error_counter = {} # Term:Error_count, i.e. the amount of times a user has incorrectly guessed a card
 
     def add_card(self):
-        while True:  # outer loop for term
+        while True:  # Outer loop for term
             term = logged_input("The card:\n")
             if term in self.cards:
                 logged_print(f"The card \"{term}\" already exists. Try again:")
                 continue
 
-            while True:  # inner loop for definition
+            while True:  # Inner loop for definition
                 definition = logged_input("The definition of the card:\n")
                 if definition in self.cards.values():
                     logged_print(f"The definition \"{definition}\" already exists. Try again:")
                     continue
 
-                # valid definition reached
+                # Valid definition reached
                 self.cards[term] = definition
                 self.error_counter[term] = 0
                 logged_print(f"The pair (\"{term}\":\"{definition}\") has been added.")
-                break  # exit inner loop after success
+                break  # Exit inner loop after success
 
-            break  # exit outer loop after success
+            break  # Exit outer loop after success
 
     def remove_card(self, term):
         if term in self.cards:
@@ -55,11 +97,11 @@ class FlashcardManager:
             logged_print(f"Can't remove \"{term}\": there is no such card.")
 
     def import_card(self):
-        file = args.import_from or input("File name:\n")
+        file = args.import_from or input("File name:\n") # If no console input in beginning then prompt user for file
         try:
             with open(file, "r", encoding="utf-8") as f:
                 lines = f.readlines()
-                for i in range(0, len(lines), 3):
+                for i in range(0, len(lines), 3): # 1st line in file = term, 2nd = definition and 3rd = error count
                     term = lines[i].strip()
                     definition = lines[i + 1].strip()
                     error = int(lines[i + 2].strip())
@@ -81,9 +123,9 @@ class FlashcardManager:
     def ask_card(self, n):
         import random
         terms = list(self.cards.keys())
-        if terms:
+        if terms: # We can't ask for definitions if we don't have any cards in our dict.
             for _ in range(n):
-                term = random.choice(terms)  # pick a card (with replacement)
+                term = random.choice(terms)
                 definition = self.cards[term]
                 user_answer = logged_input(f"Print the definition of \"{term}\":\n")
                 if user_answer == definition:
@@ -109,7 +151,7 @@ class FlashcardManager:
             return
 
         most_errors = max(self.error_counter.values())
-        hardest_cards = [x for x, v in self.error_counter.items() if v == most_errors]
+        hardest_cards = [k for k, v in self.error_counter.items() if v == most_errors] # K = Key, V = Value
         if len(hardest_cards) == 1:
             logged_print(f"The hardest card is \"{hardest_cards[0]}\". You have {most_errors} errors answering it")
         elif len(hardest_cards) >= 2:
@@ -123,7 +165,7 @@ class FlashcardManager:
         logged_print("Card statistics have been reset.")
 
     def exit(self):
-        if args.export_to:
+        if args.export_to: # Automatically exports all the current terms in memory if a CLI argument was given
             with open(args.export_to, "w") as f:
                 for term, definition in self.cards.items():
                     f.write(term + "\n")
@@ -165,5 +207,7 @@ class FlashcardApp:
                 logged_print("bye bye")
                 self.deck.exit()
                 break
+# Run the Flashcards application
+# This creates a FlashcardApp instance and starts the main loop
 abc = FlashcardApp()
 abc.run()
