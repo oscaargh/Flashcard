@@ -143,8 +143,8 @@ class FlashcardManager:
                     matching_card = next(
                         c for c, defn in self.cards.items() if defn == user_answer)
                     logged_print(
-                        f"Wrong. The right answer is \"{definition}\", but 
-                        your definition is correct for "
+                        f"Wrong. The right answer is \"{definition}\", but" 
+                        "your definition is correct for "
                         f"\"{matching_card}\".")
                     self.error_counter[term] += 1
                 else:
@@ -167,8 +167,8 @@ class FlashcardManager:
         ) if v == most_errors]  # K = Key, V = Value
         if len(hardest_cards) == 1:
             logged_print(
-                f"The hardest card is \"{hardest_cards[0]}\". You have
-                 {most_errors} errors answering it")
+                f"The hardest card is \"{hardest_cards[0]}\". You have {most_errors} errors answering it"
+            )
         elif len(hardest_cards) >= 2:
             names = ', '.join(f'"{card}"' for card in hardest_cards)
             logged_print(
